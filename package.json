@@ -1,0 +1,23 @@
+{
+  "name": "mongo-neo",
+  "version": "1.0.0",
+  "description": "Connection to mongodb an neo4j",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chuxolatouz/mongo-neo.git"
+  },
+  "author": "chuxolatouz, yeremy and deyka",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chuxolatouz/mongo-neo/issues"
+  },
+  "homepage": "https://github.com/chuxolatouz/mongo-neo#readme",
+  "dependencies": {
+    "mongodb": "^2.1.7",
+    "neo4j": "^1.1.1"
+  }
+}
