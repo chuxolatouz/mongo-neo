@@ -1,34 +1,68 @@
 var MongoClient = require('mongodb').MongoClient;
-var neo4j = require('neo4j');
-var neo = new neo4j.GraphDatabase('http://username:password@localhost:7474');
+var assert = require('assert');
+var ObjectId = require('mongodb').ObjectID;
+var url = 'mongodb://localhost:27017/proyectofase1';
 
-// Connect to the db
-MongoClient.connect("mongodb://localhost:27017/exampleDb", function(err, db) {
-  if(err) { return console.dir(err); }
+var insertDocument = function(db, callback) {
+   db.collection('restaurants').insertOne( {
+      "address" : {
+         "street" : "2 Avenue",
+         "zipcode" : "10075",
+         "building" : "1480",
+         "coord" : [ -73.9557413, 40.7720266 ]
+      },
+      "borough" : "Manhattan",
+      "cuisine" : "Italian",
+      "grades" : [
+         {
+            "date" : new Date("2014-10-01T00:00:00Z"),
+            "grade" : "A",
+            "score" : 11
+         },
+         {
+            "date" : new Date("2014-01-16T00:00:00Z"),
+            "grade" : "B",
+            "score" : 17
+         }
+      ],
+      "name" : "Vella",
+      "restaurant_id" : "41704620"
+   }, function(err, result) {
+    assert.equal(err, null);
+    console.log("Inserted a document into the restaurants collection.");
+    callback();
+  });
+};
 
-  db.collection('test', function(err, collection) {});
+var findPersonajes = function(db, callback) {
+   var cursor =db.collection('personajes').find();
+   cursor.each(function(err, doc) {
+      assert.equal(err, null);
+      if (doc != null) {
+         console.dir(doc);
+      } else {
+         callback();
+      }
+   });
+};
+var findCasas = function(db, callback) {
+   var cursor =db.collection('casas').find();
+   cursor.each(function(err, doc) {
+      assert.equal(err, null);
+      if (doc != null) {
+         console.dir(doc);
+      } else {
+         callback();
+      }
+   });
+};
 
-  db.collection('test', {w:1}, function(err, collection) {});
+MongoClient.connect(url, function(err, db) {
+  assert.equal(null, err);
+  findPersonajes(db, function() {
 
-  db.createCollection('test', function(err, collection) {});
-
-  db.createCollection('test', {w:1}, function(err, collection) {});
-
-});
-
-
-neo.cypher({
-    query: 'MATCH (u:User {email: {email}}) RETURN u',
-    params: {
-        email: 'alice@example.com',
-    },
-}, function (err, results) {
-    if (err) throw err;
-    var result = results[0];
-    if (!result) {
-        console.log('No user found.');
-    } else {
-        var user = result['u'];
-        console.log(JSON.stringify(user, null, 4));
-    }
+  });
+  findCasas(db, function() {
+      db.close();
+  });
 });
