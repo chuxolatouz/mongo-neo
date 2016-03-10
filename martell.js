@@ -13,7 +13,7 @@ function newcypher(query,params){
     json: { statements: [{statement:query,parameters:params}]}
   });
   console.dir(query);
-  var user = JSON.parse(res.getBody('utf8'));
+  var user = res.getBody('utf8');
   console.dir(user);
 }
 
