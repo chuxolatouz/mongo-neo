@@ -33,8 +33,8 @@ var findPersonajes = function(db, callback) {
    cursor.each(function(err, doc) {
       assert.equal(err, null);
       if (doc != null) {
-         console.dir(doc);
-	personajes.push(doc);
+         //console.dir(doc);
+	        personajes.push(doc);
       } else {
          callback();
       }
@@ -118,7 +118,7 @@ var insertNeo4jcasa = function(item){
 var insertNeo4jpersonaje = function(item){
 	//estos son los datos a insertar en cada nodo
 	//console.log('process and insert into neo4j');
-	var nombre = "",id= "",zona="",genero="",eventos="",casa="";
+	var nombre = "",id= "",zona="",genero="",eventos="[]",casa="",mato="[]";
 	for(var i = 0; i <item.length; i++){
     		//console.log('---------------------');
     		////console.dir(item[i]);
@@ -156,10 +156,20 @@ var insertNeo4jpersonaje = function(item){
 		}
 		////console.dir(item[i].Genero);
 		if (item[i].Eventos != undefined){
+      //console.log('------------');
+      eventos = JSON.stringify(item[i].Eventos);
+      //eventos = JSON.stringify(item[i].Eventos).replace(/"/g,"\"");
 			//console.dir(item[i].Eventos);
-		}
+		} else {
+      eventos = "[]";
+    }
+    if(item[i].Mató != undefined){
+      mato= JSON.stringify(item[i].Mató);
+    } else {
+      mato = "[]";
+    }
    		////console.dir('\"'+nombre+'\"');
-    		query = "CREATE(personaje"+i+":"+casa.replace(/"/g,"")+"{ idm:"+id+","+"name:"+nombre+","+" Genero:"+genero+","+" Zona:"+zona+","+" Casa:"+casa+"})";
+    		query = "CREATE(personaje"+i+":"+casa.replace(/"/g,"")+"{ idm:"+id+","+"name:"+nombre+","+" Genero:"+genero+","+"Eventos:"+eventos+","+" Mato:"+mato+","+" Zona:"+zona+","+" Casa:"+casa+"})";
     		//console.dir(query);
     		var cb=function(err,data) { console.log(JSON.stringify(data)) }
     		var params = {};
@@ -174,7 +184,7 @@ var insertNeo4jpersonaje = function(item){
 		if(item[j].Casa != undefined){
 					var personaje = item[j]._id;
 					var casa = item[j].Casa;
-            				var query ="MATCH (a),(b) WHERE a.idm ="+personaje+" and b.nombre = "+'\"'+casa+'\"'+" CREATE (a)-[r:PERTENECE_A]->(b)";
+            				var query ="MATCH (a),(b) WHERE a.idm ="+personaje+" and b.nombre = "+'\"'+casa+'\"'+" CREATE (a)-[r:PERTENECE_A"+"{rating:"+Math.random()+"}"+"]->(b)";
             				var cb=function(err,data) { console.log(JSON.stringify(data)) }
             				var params = {};
             				//cypher(query,params,cb);
@@ -192,7 +202,7 @@ var insertNeo4jpersonaje = function(item){
 						//console.dir(item[j].Nombre);
             					var padre = item[l]._id;
            				        var hijo = item[j]._id;
-            var query ="MATCH (a),(b) WHERE a.idm ="+padre+" and b.idm = "+hijo+" CREATE (a)-[r:ES_HIJO_DE]->(b)";
+            var query ="MATCH (a),(b) WHERE a.idm ="+padre+" and b.idm = "+hijo+" CREATE (a)-[r:ES_HIJO_DE"+"{rating:"+Math.random()+"}"+"]->(b)";
             //console.dir(query);
             var cb=function(err,data) { console.log(JSON.stringify(data)) }
             var params = {};
@@ -215,7 +225,7 @@ var insertNeo4jpersonaje = function(item){
 						//console.dir(item[j]._id);
             					var padre = item[l]._id;
             					var hijo = item[j]._id;
-            					var query ="MATCH (a),(b) WHERE a.idm ="+padre+" and b.idm = "+hijo+" CREATE (a)-[r:ES_PADRE_DE]->(b)";
+            					var query ="MATCH (a),(b) WHERE a.idm ="+padre+" and b.idm = "+hijo+" CREATE (a)-[r:ES_PADRE_DE"+"{rating:"+Math.random()+"}"+"]->(b)";
             					//console.dir(query);
             					var cb=function(err,data) { console.log(JSON.stringify(data)) }
             					var params = {};
@@ -238,7 +248,7 @@ var insertNeo4jpersonaje = function(item){
 						//console.dir(item[j]._id);
             var padre = item[l]._id;
             var cony = item[j]._id;
-            var query ="MATCH (a),(b) WHERE a.idm ="+padre+" and b.idm = "+cony+" CREATE (a)-[r:ES_CONYUGE_DE]->(b)";
+            var query ="MATCH (a),(b) WHERE a.idm ="+padre+" and b.idm = "+cony+" CREATE (a)-[r:ES_CONYUGE_DE"+"{rating:"+Math.random()+"}"+"]->(b)";
             //console.dir(query);
             var cb=function(err,data) { console.log(JSON.stringify(data)) }
             var params = {};
@@ -250,7 +260,19 @@ var insertNeo4jpersonaje = function(item){
 
 		}
 	}
-
+  var params={};
+  var query1 = "MATCH (n)-[:PERTENECE_A]->(x) WHERE n.Casa <> '' RETURN n.Casa as Casa, count(n.Casa) as cont order by cont desc";
+  var query2 = "MATCH (x)-[:ES_PADRE_DE]->(n) where x.Genero=\"M\" and n.Genero=\"M\" with x.name as Padre, count(n.Genero) as HijosVarones where HijosVarones >= 2 return Padre, HijosVarones Order by HijosVarones desc";
+  var query3 = "MATCH (n) WHERE n.Eventos <> \'\' unwind n.Eventos AS evento WITH n.name as Nombre, count(evento) AS NumEventos RETURN Nombre, NumEventos ORDER BY NumEventos DESC LIMIT 1";
+  var query4 = "MATCH (x)-[:ES_ALIADO_DE]->(n:casa) WITH n.nombre as Casa, count(x) AS Cantidad RETURN Casa , Cantidad ORDER BY Cantidad DESC LIMIT 1";
+  var query5 = "MATCH (n) unwind n.Mato AS mato WITH n.Casa as Casa, n.name as Nombre, count(mato) AS CantAsesinatos RETURN Casa, Nombre, CantAsesinatos ORDER BY CantAsesinatos DESC LIMIT 1";
+  var query6 = "MATCH (x)-[:ES_CONYUGE_DE]->(n) where  n.Casa <> \'Martell\' WITH count(n) AS CantidadDifMiembros RETURN CantidadDifMiembros"
+  newcypher(query1,params);
+  newcypher(query2,params);
+  newcypher(query3,params);
+  newcypher(query4,params);
+  newcypher(query5,params);
+  newcypher(query6,params);
 
 }
 var findCasas = function(db, callback) {
@@ -277,6 +299,5 @@ MongoClient.connect(url, function(err, db) {
 	insertNeo4jpersonaje(personajes);
    db.close();
   });
-
 
 });
